@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -22,6 +23,7 @@ final class SnakeScreen extends Screen {
     private void reset() { body.clear(); body.add(4*W+6); body.add(4*W+5); body.add(4*W+4); dx=1;dy=0;queuedX=1;queuedY=0;score=0;over=false;scoreSent=false;food=newFood(); }
     private int newFood() { int p; do { p=ThreadLocalRandom.current().nextInt(W*H); } while(body.contains(p)); return p; }
     @Override protected void init() {
+        setFocused(null);
         int top=(height-H*CELL)/2;
         addRenderableWidget(Button.builder(Component.literal("↑"), b->turn(0,-1)).bounds(width/2-22,top+H*CELL+8,44,20).build());
         addRenderableWidget(Button.builder(Component.literal("←"), b->turn(-1,0)).bounds(width/2-70,top+H*CELL+8,44,20).build());
@@ -32,13 +34,16 @@ final class SnakeScreen extends Screen {
     private void turn(int x,int y) { if ((x != -dx || y != -dy) && (x != dx || y != dy)) { queuedX=x;queuedY=y; } }
     @Override public boolean keyPressed(KeyEvent event) {
         if (!over) {
-            switch (event.key()) {
-                case 87, 265 -> turn(0,-1);  // W / Up
-                case 83, 264 -> turn(0,1);   // S / Down
-                case 65, 263 -> turn(-1,0);  // A / Left
-                case 68, 262 -> turn(1,0);   // D / Right
-                default -> { return super.keyPressed(event); }
-            }
+            // Consume movement before Screen's focused-widget navigation gets the event.
+            // shortcutKey is the SDL key value used by vanilla's screen navigation;
+            // key is the GLFW key value used by the actual key mapping.
+            int key = event.key(), shortcut = event.shortcutKey();
+            var options = Minecraft.getInstance().options;
+            if (options.keyUp.matches(event) || key == 87 || shortcut == 119 || key == 265 || shortcut == 1073741906) turn(0,-1);
+            else if (options.keyDown.matches(event) || key == 83 || shortcut == 115 || key == 264 || shortcut == 1073741905) turn(0,1);
+            else if (options.keyLeft.matches(event) || key == 65 || shortcut == 97 || key == 263 || shortcut == 1073741904) turn(-1,0);
+            else if (options.keyRight.matches(event) || key == 68 || shortcut == 100 || key == 262 || shortcut == 1073741903) turn(1,0);
+            else return super.keyPressed(event);
             return true;
         }
         return super.keyPressed(event);

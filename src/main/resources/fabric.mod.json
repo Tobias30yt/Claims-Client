@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "claims_client",
-  "version": "1.31.4",
+  "version": "1.31.5",
   "name": "Claims Client",
   "description": "Optional vanilla-style screens and Snake for Claims/Reports Paper servers.",
   "authors": ["Tobias30"],
