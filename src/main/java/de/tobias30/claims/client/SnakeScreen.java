@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -29,6 +30,19 @@ final class SnakeScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("Again / Close"), b->{ if(over) reset(); else onClose(); }).bounds(width/2-55,top+H*CELL+54,110,20).build());
     }
     private void turn(int x,int y) { if ((x != -dx || y != -dy) && (x != dx || y != dy)) { queuedX=x;queuedY=y; } }
+    @Override public boolean keyPressed(KeyEvent event) {
+        if (!over) {
+            switch (event.key()) {
+                case 87, 265 -> turn(0,-1);  // W / Up
+                case 83, 264 -> turn(0,1);   // S / Down
+                case 65, 263 -> turn(-1,0);  // A / Left
+                case 68, 262 -> turn(1,0);   // D / Right
+                default -> { return super.keyPressed(event); }
+            }
+            return true;
+        }
+        return super.keyPressed(event);
+    }
     @Override public void tick() { if(over){reportScore();return;} if(++delay<5)return; delay=0;dx=queuedX;dy=queuedY;int head=body.peekFirst(),x=head%W+dx,y=head/W+dy;if(x<0||x>=W||y<0||y>=H){over=true;reportScore();return;}int next=y*W+x;boolean eat=next==food;if(body.contains(next)&&(eat||body.peekLast()!=next)){over=true;reportScore();return;}body.addFirst(next);if(eat){score++;if(body.size()==W*H){over=true;reportScore();}else food=newFood();}else body.removeLast(); }
     private void reportScore(){if(scoreSent||!ClientPlayNetworking.canSend(Payloads.SnakeAction.TYPE))return;ByteBuffer b=ByteBuffer.allocate(17).putInt(0x534E414B).put((byte)3).putLong(token).putInt(score);ClientPlayNetworking.send(new Payloads.SnakeAction(b.array()));scoreSent=true;}
     @Override public void extractRenderState(GuiGraphicsExtractor g,int mouseX,int mouseY,float delta) { super.extractRenderState(g,mouseX,mouseY,delta);int left=(width-W*CELL)/2,top=(height-H*CELL)/2;g.centeredText(font,Component.literal("Snake  •  Score: "+score),width/2,top-24,0xFFFFFFFF);for(int i=0;i<W*H;i++){int x=left+(i%W)*CELL,y=top+(i/W)*CELL;g.fill(x,y,x+CELL-1,y+CELL-1,body.contains(i)?0xFF55CC66:i==food?0xFFE34F4F:0xFF242B35);}if(over)g.centeredText(font,Component.literal("Game over"),width/2,top+H*CELL/2,0xFFFFFFFF); }

@@ -1,6 +1,6 @@
 plugins { id 'net.fabricmc.fabric-loom' version '1.17.21' }
 group = 'de.tobias30.claims'
-version = '1.31.3'
+version = '1.31.4'
 base { archivesName = 'Claims-Client' }
 repositories { mavenCentral() }
 dependencies {
