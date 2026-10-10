@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import net.minecraft.client.KeyMapping;
+import net.fabricmc.loader.api.FabricLoader;
 
 public final class ClaimsClient implements ClientModInitializer {
     private boolean announced;
@@ -18,6 +19,8 @@ public final class ClaimsClient implements ClientModInitializer {
     static long currentSnakeSession = Long.MIN_VALUE;
     static SnakeScreen activeSnake;
     @Override public void onInitializeClient() {
+        String version = FabricLoader.getInstance().getModContainer("claims_client").map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("0.0.0");
+        new ClientUpdateChecker(version).start();
         PayloadTypeRegistry.serverboundPlay().register(Payloads.Hello.TYPE, Payloads.Hello.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(Payloads.Action.TYPE, Payloads.Action.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(Payloads.Menu.TYPE, Payloads.Menu.CODEC);
