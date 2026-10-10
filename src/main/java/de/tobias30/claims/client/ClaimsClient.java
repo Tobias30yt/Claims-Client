@@ -3,6 +3,7 @@ package de.tobias30.claims.client;
 import de.tobias30.claims.shared.Wire;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.*;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.network.chat.Component;
@@ -25,11 +26,7 @@ public final class ClaimsClient implements ClientModInitializer {
         PayloadTypeRegistry.serverboundPlay().register(Payloads.Open.TYPE, Payloads.Open.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(Payloads.Snake.TYPE, Payloads.Snake.CODEC);
         KeyMapping.Category category = KeyMapping.Category.register(net.minecraft.resources.Identifier.parse("claims:general"));
-        openGui = new KeyMapping("key.claims.open_gui", 79, category);
-        try {
-            Class<?> helper = Class.forName("net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper");
-            helper.getMethod("registerKeyBinding", KeyMapping.class).invoke(null, openGui);
-        } catch (ReflectiveOperationException e) { throw new IllegalStateException("Could not register Claims keybinding", e); }
+        openGui = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.claims.open_gui", 79, category));
         ClientPlayNetworking.registerGlobalReceiver(Payloads.Menu.TYPE, (payload, context) -> {
             try {
                 Wire.Menu menu = Wire.menu(payload.bytes());
